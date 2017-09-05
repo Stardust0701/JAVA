@@ -1,0 +1,6 @@
+map.clear错误的用法
+1.
+  for(Map map : user){
+  Map userList = new HashMap();
+  
+  }
