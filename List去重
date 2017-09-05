@@ -1,0 +1,2 @@
+对userList去重
+List<String> ids = new ArrayList<String>(new HashSet(userList))
