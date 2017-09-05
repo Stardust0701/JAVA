@@ -43,4 +43,5 @@ for(Map map:user){
 			}
 		}
     
-    第二种方法会报错，原因是Map指针的问题，详见http://blog.csdn.net/Cs_Hu/article/details/53469374
+    第二种方法会报错，原因是Map指针的问题，其实代码1是把一个新的map指针放入dataMap1里面，代码2是把user里面的map对象的指针放入dataMap1里面
+    详见http://blog.csdn.net/Cs_Hu/article/details/53469374
