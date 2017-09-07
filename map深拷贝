@@ -6,7 +6,7 @@ map深拷贝时 需要对其进行序列化
             ObjectOutputStream oos = new ObjectOutputStream(baos);
             oos.writeObject(obj);
             oos.close();
-
+            //从流里读出来
             ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
             ObjectInputStream ois = new ObjectInputStream(bais);
             clonedObj = (T) ois.readObject();
