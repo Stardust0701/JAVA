@@ -4,16 +4,16 @@
 　所以Iterator在工作的时候是不允许被迭代的对象被改变的。但可使用Iterator本身的remove()来删除对象，
   Iterator.remove()方法会在删除当前迭代对象的同时保持索引的一致性。
 例如：
-			for(String socket : dataMap1.keySet()){
-				for(Map userMessage : dataMap1.get(socket)){
-					String userid = ConvertUtil.convertToString(userMessage.get("userid"));
-					if(!TapSocketListener.getInstance().isConnect(socket, userid)){
-						continue;
-					}
-					TapSocketListener.getInstance().sendCommonMessage(socket, userid, ConvertUtil.convertToString(userMessage.get("message")));
-					dataMap1.get(socket).remove(userMessage);
-				}
-			}
+for(String socket : dataMap1.keySet()){
+ for(Map userMessage : dataMap1.get(socket)){
+  String userid = ConvertUtil.convertToString(userMessage.get("userid"));
+   if(!TapSocketListener.getInstance().isConnect(socket, userid)){
+     continue;
+    }
+   TapSocketListener.getInstance().sendCommonMessage(socket, userid, ConvertUtil.convertToString(userMessage.get("message")));
+   dataMap1.get(socket).remove(userMessage);
+ }
+}
  运行会报ConcurrentModificationException异常；
  
  解决办法：在遍历时 先对原本进行一次深拷贝，然后遍历副本，删除原本，问题解决；
@@ -38,16 +38,17 @@ map深拷贝时 需要对其进行序列化 代码如下：
         return clonedObj;
     }
    改变后代码如下：
-   Map<String, List<Map<String, String>>> data = new ConcurrentHashMap<String, List<Map<String, String>>>();
-			data = this.clone(dataMap1);
-			for(String socket : data.keySet()){
-				for(Map userMessage : data.get(socket)){
-					String userid = ConvertUtil.convertToString(userMessage.get("userid"));
-					if(!TapSocketListener.getInstance().isConnect(socket, userid)){
-						continue;
-					}
-					TapSocketListener.getInstance().sendCommonMessage(socket, userid, ConvertUtil.convertToString(userMessage.get("message")));
-					dataMap1.get(socket).remove(userMessage);
-				}
-			}
+Map<String, List<Map<String, String>>> data = new ConcurrentHashMap<String, List<Map<String, String>>>();
+data = this.clone(dataMap1);
+for(String socket : data.keySet()){
+ for(Map userMessage : data.get(socket)){
+  String userid = ConvertUtil.convertToString(userMessage.get("userid"));
+  if(!TapSocketListener.getInstance().isConnect(socket, userid)){
+	continue;
+   }
+  TapSocketListener.getInstance().sendCommonMessage(socket, userid, ConvertUtil.convertToString(userMessage.get("message")));
+  dataMap1.get(socket).remove(userMessage);
+ }
+}
     亲测可行！！
+详见：http://www.cnblogs.com/HendSame-JMZ/p/6095003.html   http://www.cnblogs.com/andy-zhou/p/5339683.html
