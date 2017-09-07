@@ -1,4 +1,23 @@
-map深拷贝时 需要对其进行序列化 
+在对容器进行遍历时，不允许进行删除  
+  原因:Iterator 工作在一个独立的线程中，并拥有一个mutex锁。 Iterator被创建后会建立一个指向原来对象的单链索引表，当原来的对象数量发生变化时，
+  这个索引表的内容不会同步改变，所以当索引指针往后移动的时候就找不到要迭代的对象，Iterator会抛出java.util.ConcurrentModificationException异常。 
+　所以Iterator在工作的时候是不允许被迭代的对象被改变的。但可使用Iterator本身的remove()来删除对象，
+  Iterator.remove()方法会在删除当前迭代对象的同时保持索引的一致性。
+例如：
+			for(String socket : dataMap1.keySet()){
+				for(Map userMessage : dataMap1.get(socket)){
+					String userid = ConvertUtil.convertToString(userMessage.get("userid"));
+					if(!TapSocketListener.getInstance().isConnect(socket, userid)){
+						continue;
+					}
+					TapSocketListener.getInstance().sendCommonMessage(socket, userid, ConvertUtil.convertToString(userMessage.get("message")));
+					dataMap1.get(socket).remove(userMessage);
+				}
+			}
+ 运行会报ConcurrentModificationException异常；
+ 
+ 解决办法：在遍历时 先对原本进行一次深拷贝，然后遍历副本，删除原本，问题解决；
+map深拷贝时 需要对其进行序列化 代码如下：
  public static <T> T clone(T obj){
         T clonedObj = null;
         try {
@@ -18,5 +37,17 @@ map深拷贝时 需要对其进行序列化
 
         return clonedObj;
     }
-   
+   改变后代码如下：
+   Map<String, List<Map<String, String>>> data = new ConcurrentHashMap<String, List<Map<String, String>>>();
+			data = this.clone(dataMap1);
+			for(String socket : data.keySet()){
+				for(Map userMessage : data.get(socket)){
+					String userid = ConvertUtil.convertToString(userMessage.get("userid"));
+					if(!TapSocketListener.getInstance().isConnect(socket, userid)){
+						continue;
+					}
+					TapSocketListener.getInstance().sendCommonMessage(socket, userid, ConvertUtil.convertToString(userMessage.get("message")));
+					dataMap1.get(socket).remove(userMessage);
+				}
+			}
     亲测可行！！
