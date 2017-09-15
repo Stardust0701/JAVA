@@ -1,7 +1,7 @@
 在对容器进行遍历时，不允许进行删除  
   原因:Iterator 工作在一个独立的线程中，并拥有一个mutex锁。 Iterator被创建后会建立一个指向原来对象的单链索引表，当原来的对象数量发生变化时，
   这个索引表的内容不会同步改变，所以当索引指针往后移动的时候就找不到要迭代的对象，Iterator会抛出java.util.ConcurrentModificationException异常
-  简单来说就是每当对容器的元素进行增删的时候，count会+1，遍历时count的值不对等，就会报异常。
+  简单来说就是每当对容器的元素进行增删的时候，count会+1，遍历时count的值不对等，就会报异常，具体详见fail-fast理论。
 　所以Iterator在工作的时候是不允许被迭代的对象被改变的。但可使用Iterator本身的remove()来删除对象，
   Iterator.remove()方法会在删除当前迭代对象的同时保持索引的一致性。
 例如：
