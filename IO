@@ -113,4 +113,6 @@ c. 从流的角色可以分成两类：
        
        
 8.
-  
+  CharArrayReader：
+    与ByteArrayInputStream不同的是：当调用car的close方法是将内置缓存数组cbuffer设为null、而且car会抛出IOException异常（ensureOpen方法、
+  即当cbuffer为null时则认为car关闭）
