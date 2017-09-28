@@ -116,3 +116,31 @@ c. 从流的角色可以分成两类：
   CharArrayReader：
     与ByteArrayInputStream不同的是：当调用car的close方法是将内置缓存数组cbuffer设为null、而且car会抛出IOException异常（ensureOpen方法、
   即当cbuffer为null时则认为car关闭）
+  CharArrayWriter：
+    在此类上调用 close()、flush()无效，不会产生IOException、并且在关闭该流后仍然可以调用此类中的各个方法
+9.
+  OutputStreamWriter :
+    字符输出流、是使用指定的编码或者是系统默认的编码将字节转换成字符。 
+  是OutputStream转换成Writer的桥梁、也是PrintStream、能够在构造的时候指定编码的关键。 
+  实际上是将OutputStream传递给了StreamEncoder来操作out
+  
+  OutputStreamWriter、InputStreamReader分别为InputStream、OutputStream的低级输入输出流提供将字节转换成字符的桥梁、他们只是外边的一个门面、
+    真正的核心：OutputStreamWriter中的StreamEncoder：
+             1、使用指定的或者默认的编码集将字符转码为字节        
+             2、调用StreamEncoder自身实现的写入方法将转码后的字节写入到底层字节输出流中。      
+    InputStreamReader中的StreamDecoder：
+             1、使用指定的或者默认的编码集将字节解码为字符         
+             2、调用StreamDecoder自身实现的读取方法将解码后的字符读取到程序中。
+在理解这两个流的时候要注意：java——io中只有将字节转换成字符的类、没有将字符转换成字节的类、原因很简单——字符流的存在本来就像对字节流进行了装饰、
+加工处理以便更方便的去使用、在使用这两个流的时候要注意：由于这两个流要频繁的对读取或者写入的字节或者字符进行转码、解码和与底层流的源和目的地进行交互、
+所以使用的时候要使用BufferedWriter、BufferedReader进行包装、以达到最高效率、和保护存储介质。
+
+10.
+  FileWriter使用的方法本质都是通过OutputStreamWriter将FileOutputStream传递给StreamEncoder来内部操作字节。给我们展现的则是操作字符。
+  
+11.
+  PrintWriter与PrintStream很类似、要注意的就是一个是自动刷新的问题、另一个就是PrintStream可以实现将字节写入底层流中write(intb)     
+write(byte[] b, int off, int len)、而PrintWriter没有相关方法来直接将字节写入到out中、还有一点就不管是PrintWriter还是PrintStream、
+他写入到底层流中的java基础类型或者java对象都是以字符串的形式写入的、所以当我们读取之后要做一些处理、而关于print(Object)只是将Object的表示此对象
+的Object.toString()这个结果写入到out中、所以读取出来并不是强转一下就可以使用、要想操作java基础类型和对象、应该使用对应的流
+DataInputStream/DataOutputStream        ObjectInputStream/ObjectOutputStream
