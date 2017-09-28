@@ -1,0 +1,116 @@
+参考http://blog.csdn.net/crave_shy/article/details/16866755
+a. 从流的方向上分为两类：
+
+         1.输入流：从数据源中将数据读取到程序中的流。
+         2.输出流：程序将数据写入到目的地的流。
+注：输入输出是从某个角度出发去区分的、java中是站在程序的角度来区分流的输入输出的。将数据读取到程序中的就是输入流、将程序中的数据写出去的就是输出流。
+b. 从流的数据类型上分为两类：
+
+         1.字节流：以8位的字节形式来读写的流。他们的标志是名称以Stream结尾。InputStream、OutputStream分别是所有字节输入流、字节输出流的父类。
+         2.字符流：以字符形式来读写的流。他们的标志是名称以Writer或者Reader结尾。并且Writer、Reader分别是所有字符输出流、字符输入流的父类。
+c. 从流的角色可以分成两类：
+         1.节点流：从/向一个特定的IO设备（如网络、磁盘）读/写数据的流。也被称为低级流（Low Level Stream）。
+         2.处理流：对一个已经存在的流进行连接或者封装、通过封装后的流来进行读/写、也被称为高级流。
+ 
+ 
+字节与字符流之间的本质区别：仅仅是操作的单元不一样！有些数据既可以使用字节流、又可以使用字符流、因为这些数据既可以用字符表示也可以用字节表示
+有些只能用字节流、比如ByteArrayInputStream、ByteOutputStream、DataInputStream、DataOutputStream、ObjectInputStream、ObjectOutputStream、
+因为他的操作对象只能是字节、并且不能将这些字节转换成字符。
+
+
+1.
+  ByteArrayInputStream：
+    调用close()方法对此流无效、当你调用过close()方法之后、ByteArrayInputStream中的其他方法仍然可以正常调用、并且此流不会产生IOException
+  ByteArrayOutputStream：
+    close()方法对此流也没有作用、当调用bos.close()关闭此流时、bos的其他方法仍然能正常使用、并且不会抛出IOException异常
+2.
+   FileInputStream（fis），FileOutputStream（fos）：
+       本质是和文件打交道、两者在构造方法中都会通过传入的File对象或者表示File对象的路径名来创建实例，创建实例的过程中会根据不同的需求打开到指定文件对象
+     的连接（核心是open(String filename)、openAppend(String filename)追加模式）方法、
+       并且一般情况下类中的对单个字节操作的方法read()或者write()方法是读写的核心、但是此两类中不是、他们的读/写字节、读/写字节数组、是分别实现的、
+     都是用系统的方法实现的、其中read(byte[] b, int off, int len)和write(byte[] b, intoff, int len)是调用自己本身私有方法
+     readBytes(byte[] b, int off, int len) 和write(byte[] b, intoff, int len)来实现的、而非循环调用read()、write()。
+3.
+  PipedInputStream（pis），PipedOutputStream（pos）：
+    pis与pos绑定，绑定是通过调用pos的connect(pis)来实现的
+      PipedInputStream、PipedOutputStream两者的结合如鸳鸯一般、离开哪一方都不能继续存在、同时又如连理枝一般，
+    PipedOutputStream先通过connect(PipedInputStream snk)来确定关系、并初始化PipedInputStream状态、告诉PipedInputStream只能属于
+    这个PipedOutputStream、connect =true、当想赠与PipedInputStream字节时、就直接调用receive(byte b) ，
+    receive(byte[] b, int off, int len)来将字节或者字节数组放入pis的存折buffer中。站在PipedInputStream角度上、
+    看上哪个PipedOutputStream时就暗示pos、将主动权交给pos、调用pos的connect将自己给他去登记。当想要花（将字节读取到程序中）字节了就
+    从buffer中拿、但是自己又没有本事挣字节、所以当buffer中没有字节时、自己就等着、并且跟pos讲没有字节了、pos就会向存折（buffer）中存字节、
+    当然、pos不会一直不断往里存、当存折是空的时候也不会主动存、怕花冒、就等着pis要。要才存。过到最后两个只通过buffer来知道对方的存在与否、
+    每次从buffer中存或者取字节时都会看看对方是否安康、若安好则继续生活、若一方不在、则另一方也不愿独存！
+4.
+  DataInputStream、DataOutputStream：
+    两个装饰类的功能就是装饰底层字节流、使得java基础数据可以在存储介质和程序中以一种与机器无关的方式进行传递
+      DataOutputStream的核心是先将java基础类型的数据根据一定的规则转换成同一的二进制流、再调用传入的底层输出流的write(byte b) 、
+    write(byte[] b, int off, int len)方法将此二进制流写入到dos中进而保存到存储介质中取、
+      DataInputStream的核心是调用传入的底层字节输入流的read(byteb ) 、read(byte[] b,int off, int len)将源中通过dos写入的java基础数据的字节
+    表示形式的数据以字节的形式读取到程序中、然后根据一定的转换规则将这些字节还原成相应的java基础类型的数据、
+    比如boolean型的数据是写如一个字节“0”或者“1”用于表示“true”或者“false”那读取到“0”的话就返回“true”这种表示形式
+      DataInputStream读取的字节是要按照DataOutputStream写入字节的顺序来读取、所以不能乱读取字节、要做到正确使用这两个类、
+    最稳妥的就是将读取数据的类型顺序和写入数据的类型的顺序一致、当我们需要使用skipBytes方法的时候、要很明确的知道当调用DataOutputStream写入
+    java基础类型的时候、每种基础类型在目的地中占多少个字节、跳过多少个字节之后下一个或一组字节表示的是哪个java基础类型？
+    这里要很清楚才能正确使用这两个类、当然、一般我们使用的时候就是怎么样写入的就怎么样读取出来就行。
+      当我写入多个String的时候、按顺序读取的话、还是可以将他们分别读取出来、我并没有传递任何参数表示我要读取哪个字符串、
+    程序是如何知道将这些不是同一次写入的字符串区分开来的？原来：当DataOutputStream写入字符串的时候会多些两个字节、
+    这两个字节是用来表示将要写入的字符串的长度的、所以当我们使用DataInputStream读取字符串的时候、首先读取的是接下来要读取的字符串的长度、
+    然后他就会读取这些字节之后停止读取、将读取的结果转换成字符串返回。
+5.
+  PrintStream的本质很简单，关心两个：
+    1.是那个私有的构造方法： PrintStream(Boolean autoFlush,OutputStream out)、他的作用就是调用父类FilterInputStream的构造方法
+    将传入的底层的OutPutStream实现类赋给FilterInputStream中对底层字节输入流的引用out、使得PrintStream对传入流的包装对用户透明化、
+    同时将第一个参数autoFlush的值传递给PrintStream自身的全局变量autoFlush、用来标识此流是否具有自动刷新功能。
+    2.是那个私有的初始化方法：init(OutputStreamWriter osw)、这个方法是做了两层包装、（1）：将自身、也就是当前的PrintStream按照默认或者指定的编码
+    转换成OutputStreamWriter（这个类是将字节输出流转换成字符输出流、转换的时候可以使用指定的编码转换）、（2）：因为OutputStreamWriter
+    读取字节的效率比较低、所以用BufferedWriter（字符缓冲输出流）将OutputStreamWriter再包装一层（提高效率）。
+    
+    上面两个关键点就决定了PrintStream的功能与特点、可以自动刷新、可以指定输出时的编码（本质是通过OutputStreamWriter转换时指定的）
+    可以打印各种java类型的数据（本质也是将字节转换成字符之后、借用BufferedWriter写入到输出流中）、
+    所以：我们可以将PrintStream中的方法分成两类、一类是打印字节的方法write(byte b)、writer(byte[] b, int off, int len)这两个方法是
+    直接调用传入的底层字节输出流来实现、其他分成一类、这一类是将数据转换成字符数组、字符串之后借用BufferedWriter的包装输出到底层字节输出流中。
+6.
+  BufferedInputStream：
+    缓冲字节输入流、作为FilterInputStream的一个子类、他所提供的功能是为传入的底层字节输入流提供缓冲功能、他会通过底层字节输入流（in）中的字节
+  读取到自己的buffer中（内置缓存字节数组）、然后程序调用BufferedInputStream的read方法将buffer中的字节读取到程序中、当buffer中的字节被读取完之后
+  、BufferedInputStream会从in中读取下一个数据块到buffer中供程序读取、直到in中数据被读取完毕、这样做的好处一是提高了读取的效率、
+  二是减少了打开存储介质的连接次数、详细的原因下面BufferedOutputStream有说到。其有个关键的方法fill()就是每当buffer中数据被读取完之后从in中将
+  数据填充到buffer中、程序从内存中读取数据的速度是从磁盘中读取的十倍！这是一个很恐怖的效率的提升、同时我们也不能无禁止的指定BufferedInputStream的
+  buffer大小、毕竟、一次性读取in中耗时较长、二是内存价格相对昂贵、我们能做的就是尽量在其中找到合理点。一般也不用我们费这个心、
+  创建BufferedInputStream时使用buffer的默认大小就好
+  BufferedOutputStream：
+    将底层字节输出流、比如FileInputStream包装一下之后、我们可以在程序中先将要写入到文件中的字节写入到BufferedOutputStream的内置缓存空间中、
+  然后当达到一定数量时、一次性写入FileInputStream流中、此时、FileInputStream就可以打开一次通道、将这个数据块写入到文件中，
+  这样做虽然不可能达到一次访问就将所有数据写入磁盘中的效果、但也大大提高了效率和减少了磁盘的访问量！这就是其意义所在
+7.
+  ObjectOutputStream、ObjectInputStream：
+    这对流本质上就是操作序列化对象、用于在介质间进行传递序列化对象的属性、当然、当我们想要保存对象的某个属性的时候可以使用
+  DataOutputStream、DataInputStream这对流、但是当我们要保存的属性恰好组成了一个对象、并且这个对象还有版本、作者等信息时、DataOutputStream这对
+  流就不能满足我们了、其实如上面所说、ObjectInputStream这对流也是间接实现了DataOutputStream这对流的接口、并且中间穿插了一个ObjectOut这对接口、
+  这对接口对DataOut这对进行了扩展、满足传输对象、数组、字符串
+  
+
+
+ OutputStream/InputStream     VS   Writer/Reader
+       相同：
+       都是抽象类、为所有子类提供标准、和基本的方法及简单实现、关键方法是抽象方法、要子类根据自己的特色去实现
+       其他读写方法都是以这个关键方法为核心实现的、Reader/InputStream都继承了closeable接口。
+       Writer/OutputStream都继承了Closeable,Flushable
+      
+       区别：
+       本质区别——操作的对象不同。字节流针对的是字节、字符流针对的是字符
+      
+       Reader相比与InputStream多实现了一个Readable接口、用于提供一个可以将字符写入到指定缓存数组的方法
+       同时两者用于实现读取的关键抽象方法、reader.read(char[] cbuf,int off, int len)、inputStream.read();
+       一个是针对字符数组、一个是针对单个字节、其他的读取方法都是以这两个方法为核心的。
+       还有一个区别就是两者的close()方法类型不一样、Reader的close方法是抽象类、必须要子类重写、
+       InputStream.close不是抽象类、子类可以重写、也可不重写。
+      
+       Writer相比与OutputStream多实现了一个Appendable接口、用于向此流中追加字符。两者用于读取的关键方法也是一个针对字符数组、一个针对字节
+       并且Writer的close()、flush()方法都是抽象类、必须要子类实现具有自己的特色。
+       
+       
+       
+8.
+  
