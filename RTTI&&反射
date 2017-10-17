@@ -21,5 +21,7 @@ List<RtsTaskMasterEntity> listTaskMaster = rtsTaskMasterService.queryByWhere(" c
 	}
 	RtsTaskMasterEntity taskMaster = listTaskMaster.get(0);
 	RtsCmdTask task = (RtsCmdTask) Class.forName(taskMaster.getClassname()).newInstance();
+	...
+	task.initTask();
 
 在查询出taskMaster 时 并不知道其具体类型，但是通过反射可以实例化对应的对象，使之进行各自的初始化动作，很巧妙；
