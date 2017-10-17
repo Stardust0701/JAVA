@@ -11,3 +11,15 @@
   在Java中，Class对象与java.lang.reflect类库一起对反射的概念进行了支持。通过反射机制，匿名对象的类信息能在运行时被完全确定下来，
 尽管在编译时对其一无所知。反射也是需要使用class对象的，所以又回到了获得class对象的前提：先加载.class文件。
 所以使用反射机制与一个未知类型的对象打交道时，其类的.class文件对于JVM来说必须是可获取的，要么在本机上，要么通过网络取得。
+
+
+4.
+  例如：
+List<RtsTaskMasterEntity> listTaskMaster = rtsTaskMasterService.queryByWhere(" code = '" + command + "' ");
+	if (listTaskMaster.size() <= 0) {
+		throw new BusinessException("未维护任务档案！");
+	}
+	RtsTaskMasterEntity taskMaster = listTaskMaster.get(0);
+	RtsCmdTask task = (RtsCmdTask) Class.forName(taskMaster.getClassname()).newInstance();
+
+在查询出taskMaster 时 并不知道其具体类型，但是通过反射可以实例化对应的对象，使之进行各自的初始化动作，很巧妙；
