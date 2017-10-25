@@ -1,0 +1,41 @@
+public class Memoizer<A,V> implements Computable<A,V>{  
+  private final ConcurrentMap<A,Future<V>> cache = new ConcurrentMap<A,Future<V>>();  
+  private final Computable<A,V> c;  
+  
+  public Memoizer(Computable<A,V> c){  
+    this.c=c;  
+  }  
+  
+  public V compute(final A arg)throws InterruptedException{  
+    while(true){  
+      Future<V> f=cache.get(arg);  //future
+                                      Callable和Future，一个产生结果，一个拿到结果。 
+                                      Callable接口类似于Runnable，从名字就可以看出来了，但是Runnable不会返回结果，
+                                      并且无法抛出返回结果的异常，而Callable功能更强大一些，被线程执行后，可以返回值，
+                                      这个返回值可以被Future拿到，也就是说，Future可以拿到异步执行任务的返回值，
+  
+      if(f==null){  
+        Callable<V> eval=new Callable<V>(){     //callable
+          public V call()throws InterruptedException{  
+            return c.compute(arg);  
+          }  
+        };  
+        FutureTask<V> ft=new FutureTask<V>(eval);  
+        f=cache.putIfAbsent(arg,ft);  //putIfAbsent 如果指定键已经不再与某个值相关联，则将它与给定值关联。 原子操作
+                                        返回 以前与指定键相关联的值，如果该键没有映射关系，则返回 null
+        if(f==null){  
+          f=ft;  
+          ft.run();  
+        }  
+      }  
+  
+      try{  
+        return f.get();  
+      }catch(CancellationException e){  
+        cache.remove(arg,f);  
+      }catch(ExecutionException e){  
+        throw launderThrowable(e.getCause());  
+      }  
+    }  
+  }  
+}  
