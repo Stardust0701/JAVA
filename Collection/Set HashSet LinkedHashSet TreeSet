@@ -1,0 +1,3 @@
+1.	HashSet是基于HashMap来实现的，用HashMap来保存元素，hashCode为iterator中所有元素的hashCode的和，对于HashSet，就是底层HashMap.keySet的iterator中所有元素的和；
+2.	TreeSet是基于TreeMap实现的
+3.	LinkedHashMap是HashSet的子类，基于LinkedHashMap实现
