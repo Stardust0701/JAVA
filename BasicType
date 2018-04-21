@@ -1,1 +1,75 @@
+一 Byte类
+1.	范围：-127 – 128（-2的7次方到2的7次方减一）
+2.	占1个字节，8位
+3.	ByteCache内部类（valueOf方法调用缓存）
+4.	hashCode值即为自身强转为int后的值
+二 Integer类
+1.	范围：-2147483648 – 2147483647（-2的31次方到2的31次方减一）
+2.	占4个字节，32位
+3.	IntegerCache内部类（valueOf方法在参数处于-128到IntegerCache.high之间时调用缓存），默认为-128到127
+4.	toString(int i)会首先判断是否为最小值，因为后续的方法中用到了i = -i，若为最小值，会有越界问题；
+5.	hashCode值即为自身的值
+6.	parseInt是基于负数计算的，注意溢出的判断技巧，如multmin = limit / radix 这个数的控制和result < limit + digit
+7.	parseInt(string s，int radix)，其中s为带‘+’，‘-’或纯数值（8进制，16进制，10进制），不自动判断进制数，需用radix指定，区别于decode方法
+8.	toUnsignedString(int i, int radix)方法调用Long的toUnsignedString(long i, int radix)方法
+9.	越界问题：例如x超过Integer.MAX_VALUE，越界后显示为x-Integer.MAX_VALUE-1+Integer.MIN_VALUE，即x减去2的32次方
+三 long类
+1.	范围：-2的63次方到2的63次方减一
+2.	占8个字节，64位
+3.	LongCache内部类（valueOf方法在参数处于-128到127之间时调用缓存）
+4.	hashCode公式为value ^ (value >>> 32)
+5.	toString方法，parseLong方法注意事项与Integer类似
+6.	toUnsignedString(long i, int shift)方法中，注意formatUnsignedLong方法，shift的值（16进制下为4，8进制为3，二进制为1），唯一一个限制就是只能表示进制数是2的n次幂；首先通过int radix = 1 << shift;实现进制数的转换，随后就是一个精心的设计，long mask = radix -1; 为什么要有这样一个值呢？其实是这样的，radix是2的n次幂，减1之后就是全1了，比如8-1的二进制就是111，其他同理。然后i & mask就取到进制数对应二进制的位数。比如十六进制的mask = 15，对应的二进制为1111，i & mask就是取i对应二进制的后四位。再从Integer.digits中取得对应进制数的值。最后，再通过i >>>= shift; 将已经取得的位数移除掉，直至i=0为止
+四 Short类
+1.	范围：-32768-32767（-2的15次方到2的15次方减一）
+2.	占2个字节，16位
+3.	toString方法调用Integer的toString方法
+4.	parseShort方法调用Integer的parseInt方法
+5.	ShortCache内部类（valueOf方法在参数处于-128到127之间时调用缓存）
+6.	decode方法调用Integer的decode方法
+7.	hashCode值为自身强转为Int后的值
+五 Float类
+1.	toHexString(float f)方法调用Double的toHexString(double d)方法
+2.	占4个字节，32位
+3.	注意NaN的情况
+情形	被除数	除数	结果
+1.	Number	0	错误：/by zero
+2.	0或0.0	0.0	NaN
+3.	非0的number	0.0	Infinity或-infinity（无穷）
+4.	MAX_VALUE	MIN_VALUE	Infinity
+4.	hashCode值为floatToIntBits(float value)的返回值，即指定浮点值的表示形式
+5.	compare方法中正0比负0大，而==方法判断则相等
+6.	Float占4个字节，32位却比long占8个字节，64位的范围大，是因为float的32位不是直接表示大小，而是按照一定的标准分配的，其中1位代表符号位，8位代表指数域，23位代表小数域，也就是说，浮点数在内存中的二进制值不是直接转换为十进制数值的，而是按照上述公式计算而来
+六 Double类
+1.	NaN的情形与Float类似
+2.	占8个字节，64位
+3.	hashCode值为doubleToLongBits(double value)的返回值（bits）计算bits ^ (bits >>> 32)后的结果
+4.	compare方法中正0比负0大，而==方法判断则相等
+七 Boolean类
+1.	hashCode值：为true时是1231，为false时是1237
+八 Character类
+1.	CharacterCache内部类（valueOf方法在参数处于0到127之间时调用缓存）
+2.	占2个字节，16位
+3.	无符号类型
+4.	hashCode值为强转为int后的值
+5.	toString调用的是string的valueOf方法
+九 String类
+1.	hashCode方法只有在第一次调用的时候才计算hash值，公式是多项式计算，h = h x 31 + val[i]，即s[0]*31^(n-1) + s[1]*31^(n-2) + ... + s[n-1]；
+2.	两个string对象的hashCode相等并不意味着两个string是一样的；
+3.	问题：string（stringBuffer）构造函数为何要加锁？ 
+十 StringBuilder类
+1.	初始范围：初始数组大小为16，最大数组长度为Integer.MAX_VALUE - 8
+2.	构造函数StringBuilder() value内容为空，并设置容量为16个字节；
+3.	构造函数StringBuilder(CharSequece seq)  使用seq初始化，容量在此基础上加16；
+4.	构造函数StringBuilder(int capacity) 设置特定容量；
+5.	构造函数StringBuilder(String str)  使用str初始化，容量str大小的基础上加16；
+6.	capacity为数组的长度，length为字符串长度
+7.	扩容时，使用newCapacity方法计算长度，为max(value.length*2+2,minimumCapacity)
+十一 StringBuffer类
+1.	初始范围，构造函数和基本方法与StringBuilder类似
+2.	与StringBuilder不同的是toString方法，StringBuffer类中有一个toStringCache缓存数组，用来保存上一次调用toString的结果，如果value的字符串序列发生改变，就会将它清空
 
+String，StringBuilder和StringBuffer的区别
+1.速度上： String<StringBuffer<StringBuilder；
+2.安全上：StringBuffer线程安全，StringBuilder线程不安全；
+原因在于，String的每次改变都会涉及到字符数组的复制，而StringBuffer和StringBuilder直接在字符数组上改变；同时，StringBuffer是线程安全的，而StringBuilder线程不安全，没有StringBuffer的同步，所以StringBuilder快于StringBuffer。
