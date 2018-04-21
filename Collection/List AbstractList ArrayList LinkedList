@@ -1,0 +1,18 @@
+1.	RandmoAccess接口为ArrayList提供了快速访问能力
+2.	ArrayList构造函数，ArrayList（）将element数组设置为空数组；ArrayList（int）参数大于0时，element数组设置为该参数大小的object数组，等于0时，element数组设置为空数组，小于0抛出异常；ArrayList（collection c）根据集合c设置element数组和size参数
+3.	扩容时机，当参数大于element数组长度时，触发扩容操作（容量最小为10），新容量为old + old>>1，即每次扩容一半，如果扩容一半不够，就用目标的size作为扩容后的容量，数组容量最大为Integer.MAX_VALUE
+4.	每次 add之前，都会判断add后的容量，是否需要扩容，需要扩容时会修改modCount，删一定会修改。 改和查不会修改modCount。
+5.	删除元素时不会减少容量（若希望减少容量，trimToSize()），需要将index之后的元素整体向前复制一位，并将最后的位置置null，下次gc就会回收这些元素所占的内存空间。
+6.	线程不安全
+7.	add(int index, E element)：添加元素到数组中指定位置的时候，需要将该位置及其后边所有的元素都整块向后复制一位
+8.	remove(Object o)需要遍历数组
+9.	remove(int index)不需要遍历数组，只需判断index是否符合条件即可，效率比remove(Object o)高
+10.	hashCode值为hashCode = 31*hashCode + (e==null ? 0 : e.hashCode())，e为数组中每个元素
+11.	LinkedList和ArrayList区别：
+（1）ArrayList底层数据结构为数组，LinkedList 是一个继承于AbstractSequentialList的双向链表
+（2）LinkedList相对于ArrayList来说，可以快速添加，删除元素，ArrayList添加删除元素的话需移动数组元素，可能还需要考虑到扩容数组长度。
+12.	Vector类和ArrayList的区别：
+（1）vector默认初始容量为10，扩容时可增加容量为0，当扩容时，若设置的可增加容量大于0，则扩容该参数的大小，否则将原容量大小翻倍，最大容量为Integer.MAX_VALUE
+（2）与ArrayList一样，底层维护了一个数组，实现了RandmoAccess接口，提供了快速访问能力
+（3）线程安全
+

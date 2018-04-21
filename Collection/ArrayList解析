@@ -1,7 +1,0 @@
-详见http://blog.csdn.net/eson_15/article/category/6172207
-1.
-  ArrayList实际上是通过一个数组去保存数据的，当我们构造ArrayList时，如果使用默认构造函数，最后ArrayList的默认容量大小是10。
-2.
-  当ArrayList容量不足以容纳全部元素时，ArrayList会自动扩张容量，新的容量 = 原始容量 + 原始容量 / 2。
-3.
-  若要对list进行遍历时删除的话，会报异常，但是用list.toarray方法将list转成数组，对数组遍历然后对list进行删除就不会出现问题了。
